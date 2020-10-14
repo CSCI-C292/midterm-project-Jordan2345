@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
     [SerializeField] LayerMask _ground;
     [SerializeField] float _slopeCheckDistance;
     [SerializeField] float _jumpForce = 7f;
+    [SerializeField] RuntimeData _runtimeData;
     private bool canMove = false;
     private bool canJump = true;
     private bool isJumping;
@@ -32,10 +33,7 @@ public class Player : MonoBehaviour
         colliderSize = capCollider.size;
     }
     // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+
 
     // Update is called once per frame
     void Update()
@@ -59,6 +57,7 @@ public class Player : MonoBehaviour
         }
         else if(onGround && isOnSlope)
         {
+            rigidbody.velocity = new Vector2(0f, rigidbody.velocity.y);
             movementVector = new Vector3(-move * _movementSpeed *1.5f *slopeNormalPerp.x* Time.deltaTime, -move * _movementSpeed *1.5f* slopeNormalPerp.y * Time.deltaTime, 0f);
             transform.position += movementVector;
         }

@@ -6,6 +6,9 @@ TagManager:
   tags:
   - Ground
   - Background
+  - Death
+  - Climbables
+  - Collectable
   layers:
   - Default
   - TransparentFX
@@ -40,12 +43,12 @@ TagManager:
   - 
   - 
   m_SortingLayers:
-  - name: Default
-    uniqueID: 0
+  - name: Background
+    uniqueID: 4287952875
     locked: 0
   - name: Foreground
     uniqueID: 1927547329
     locked: 0
-  - name: Background
-    uniqueID: 4287952875
+  - name: Default
+    uniqueID: 0
     locked: 0

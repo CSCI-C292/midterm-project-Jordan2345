@@ -63,7 +63,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\KeyManager.cs" />
     <Compile Include="Assets\Scripts\Player.cs" />
+    <Compile Include="Assets\Scripts\RuntimeData.cs" />
     <None Include="Assets\Player Sprites\License.txt" />
     <None Include="Assets\Tiles\Industrial\Spritesheet\platformIndustrial_sheet@2.xml" />
     <None Include="Assets\Tiles\Background\Spritesheet\spritesheet_default.xml" />
