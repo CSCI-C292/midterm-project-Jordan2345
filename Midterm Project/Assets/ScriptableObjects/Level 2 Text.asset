@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ef1b379b19e88846a15ecff8eda2d7f, type: 3}
   m_Name: Level 2 Text
   m_EditorClassIdentifier: 
-  text: Now at Level 2
+  text: Collect the Yellow Key in order to Double Jump
