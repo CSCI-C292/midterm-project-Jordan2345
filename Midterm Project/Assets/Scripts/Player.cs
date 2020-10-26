@@ -6,31 +6,23 @@ public class Player : MonoBehaviour
 {
     [SerializeField] float _movementSpeed = 3f;
     [SerializeField] LayerMask _ground;
-    [SerializeField] float _slopeCheckDistance;
+    [SerializeField] LayerMask _climbables;
     [SerializeField] float _jumpForce = 7f;
     [SerializeField] RuntimeData _runtimeData;
     private bool canMove = false;
     private bool canJump = true;
-    private bool isJumping;
-    private bool onGround;
-    private bool isOnSlope;
-
+    private bool canClimb = false;
+    private bool isClimbing;
     private Rigidbody2D rigidbody;
-
-    private CapsuleCollider2D capCollider;
-
-    private Vector2 colliderSize;
-    private Vector2 slopeNormalPerp;
-
+    private CapsuleCollider2D collider2D;
     private int numJumps = 0;
-
-    private float slopeDownAngle;
-    private float slopeDownAngleOld;
     private void Awake()
     {
         rigidbody = transform.GetComponent<Rigidbody2D>();
-        capCollider = transform.GetComponent<CapsuleCollider2D>();
-        colliderSize = capCollider.size;
+        collider2D = transform.GetComponent<CapsuleCollider2D>();
+        //reset runtime data
+        _runtimeData._currentLevel = 1;
+        _runtimeData._upgradesCollected = new List<string>();
     }
     // Start is called before the first frame update
 
@@ -38,85 +30,82 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        isGrounded();
         if (canMove)
         {
-            SlopeCheck();
             CheckJump();
+            CheckUpgrades();
             Movement();
         }
     }
     public void Movement()
     {
-        Vector3 movementVector = new Vector3(0f,0f,0f);
         float move = Input.GetAxis("Horizontal");
-
-        if (onGround && !isOnSlope)
-        {
-            movementVector = new Vector3(move * _movementSpeed * Time.deltaTime, 0f, 0f);
-            transform.position += movementVector;
-        }
-        else if(onGround && isOnSlope)
-        {
-            rigidbody.velocity = new Vector2(0f, rigidbody.velocity.y);
-            movementVector = new Vector3(-move * _movementSpeed *1.5f *slopeNormalPerp.x* Time.deltaTime, -move * _movementSpeed *1.5f* slopeNormalPerp.y * Time.deltaTime, 0f);
-            transform.position += movementVector;
-        }
-        else if(!onGround)
-        {
-            movementVector = new Vector3(move * _movementSpeed * Time.deltaTime, 0f, 0f);
-            transform.position += movementVector;
-        }
+        Vector2 movementVector = new Vector2(move * _movementSpeed, rigidbody.velocity.y);
+        rigidbody.velocity = movementVector;
         flipSprite(movementVector);
-        canJump = numJumps < 1;
-
+        RaycastHit2D ladderHit = Physics2D.Raycast(collider2D.bounds.center, Vector2.up, collider2D.bounds.extents.y + 1f, _climbables);
+        if (ladderHit.collider != null)
+            ClimbLadder();
+        else
+            isClimbing = false;
     }
     private void CheckJump()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && canJump)
+        if (Input.GetKeyDown(KeyCode.Space) && canJump && isGrounded())
         {
             Debug.Log("Jumping");
+            rigidbody.velocity =  Vector2.up * _jumpForce;
             numJumps++;
             canJump = false;
-            rigidbody.velocity = Vector2.up * _jumpForce;
-            isJumping = true;
         }
     }
-    private void flipSprite(Vector3 movementVector)
+    private void ClimbLadder()
+    {
+        if(canClimb)
+        {
+            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
+                isClimbing = true;
+        }
+      
+        if(isClimbing)
+        {
+            float vertSpeed = Input.GetAxis("Vertical") * 4f;
+            rigidbody.velocity = new Vector2(rigidbody.velocity.x, vertSpeed);
+        }
+        if (!isClimbing)
+            rigidbody.gravityScale = 1;
+    }
+    private void CheckUpgrades()
+    {
+        canClimb = _runtimeData._upgradesCollected.Contains("ClimbLadderUpgrade");
+    }
+    private void flipSprite(Vector2 movementVector)
     {
         if (movementVector.x < 0)
             gameObject.GetComponent<SpriteRenderer>().flipX = true;
         else if (movementVector.x > 0)
             gameObject.GetComponent<SpriteRenderer>().flipX = false;
     }
-    private void SlopeCheck()
+
+    private bool isGrounded()
     {
-        Vector2 checkPos = transform.position - (Vector3)(new Vector2(0f, colliderSize.y / 2f));
-        SlopeCheckVertical(checkPos);
-    }
-    private void SlopeCheckVertical(Vector2 checkPos)
-    {
-        RaycastHit2D hit = Physics2D.Raycast(checkPos, Vector2.down,_slopeCheckDistance,_ground);
-        if(hit)
-        {
-            slopeNormalPerp = Vector2.Perpendicular(hit.normal).normalized;
-            slopeDownAngle = Vector2.Angle(hit.normal, Vector2.up);
-            if(slopeDownAngle != slopeDownAngleOld)
-            {
-                isOnSlope = true;
-            }
-            slopeDownAngleOld = slopeDownAngle;
-            Debug.DrawRay(hit.point, slopeNormalPerp, Color.red);
-            Debug.DrawRay(hit.point, hit.normal, Color.green);
-        }
+        float padding = 1f;
+        RaycastHit2D hit = Physics2D.Raycast(collider2D.bounds.center, Vector2.down, collider2D.bounds.extents.y + padding,_ground);
+        Color ray;
+        if (hit.collider != null)
+            ray = Color.green;
+        else
+            ray = Color.red;
+        Debug.DrawRay(collider2D.bounds.center, Vector2.down * collider2D.bounds.extents.y,ray);
+        return hit.collider != null;
     }
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.tag.Equals("Ground"))
         {
-            Debug.Log("Landed");
             canMove = true;
-            onGround = true;
-            isJumping = false;
+            canJump = true;
             numJumps = 0;
         }
     }

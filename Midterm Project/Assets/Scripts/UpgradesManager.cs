@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class KeyManager : MonoBehaviour
+public class UpgradesManager : MonoBehaviour
 {
     [SerializeField] RuntimeData _runtimeData;
     // Start is called before the first frame update
@@ -20,9 +20,9 @@ public class KeyManager : MonoBehaviour
     {
         Debug.Log("Shark Pog");
         Debug.Log(gameObject.name);
-        if(!_runtimeData._keysCollected.Contains(gameObject.name))
+        if(!_runtimeData._upgradesCollected.Contains(gameObject.name))
         {
-            _runtimeData._keysCollected.Add(gameObject.name);
+            _runtimeData._upgradesCollected.Add(gameObject.name);
             gameObject.SetActive(false);
         }
     }
