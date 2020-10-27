@@ -21,7 +21,7 @@ TagManager:
   - Foreground
   - Background
   - Interactables
-  - 
+  - Death
   - 
   - 
   - 
@@ -45,6 +45,9 @@ TagManager:
   m_SortingLayers:
   - name: Background
     uniqueID: 4287952875
+    locked: 0
+  - name: Interactables
+    uniqueID: 1449665053
     locked: 0
   - name: Foreground
     uniqueID: 1927547329

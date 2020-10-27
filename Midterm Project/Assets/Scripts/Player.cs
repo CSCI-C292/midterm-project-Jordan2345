@@ -9,12 +9,16 @@ public class Player : MonoBehaviour
     [SerializeField] LayerMask _climbables;
     [SerializeField] float _jumpForce = 7f;
     [SerializeField] RuntimeData _runtimeData;
+
     private bool canMove = false;
     private bool canJump = true;
     private bool canClimb = false;
+    private bool canDoubleJump;
     private bool isClimbing;
+
     private Rigidbody2D rigidbody;
     private CapsuleCollider2D collider2D;
+
     private int numJumps = 0;
     private void Awake()
     {
@@ -22,7 +26,7 @@ public class Player : MonoBehaviour
         collider2D = transform.GetComponent<CapsuleCollider2D>();
         //reset runtime data
         _runtimeData._currentLevel = 1;
-        _runtimeData._upgradesCollected = new List<string>();
+        //_runtimeData._upgradesCollected = new List<string>();
     }
     // Start is called before the first frame update
 
@@ -52,12 +56,26 @@ public class Player : MonoBehaviour
     }
     private void CheckJump()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && canJump && isGrounded())
+        if (Input.GetKeyDown(KeyCode.Space) && canJump)
         {
-            Debug.Log("Jumping");
-            rigidbody.velocity =  Vector2.up * _jumpForce;
-            numJumps++;
-            canJump = false;
+            if(canDoubleJump)
+            {
+                if(numJumps <=1)
+                {
+                    rigidbody.velocity = Vector2.up * _jumpForce;
+                    numJumps++;
+                }
+            }
+            else
+            {
+                if(isGrounded())
+                {
+                    rigidbody.velocity = Vector2.up * _jumpForce;
+                    numJumps++;
+                    canJump = false;
+                }
+            }
+            
         }
     }
     private void ClimbLadder()
@@ -79,6 +97,7 @@ public class Player : MonoBehaviour
     private void CheckUpgrades()
     {
         canClimb = _runtimeData._upgradesCollected.Contains("ClimbLadderUpgrade");
+        canDoubleJump = _runtimeData._upgradesCollected.Contains("DoubleJumpUpgrade");
     }
     private void flipSprite(Vector2 movementVector)
     {
@@ -102,11 +121,19 @@ public class Player : MonoBehaviour
     }
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.tag.Equals("Ground"))
+        if (collision.gameObject.tag.Equals("Ground") && isGrounded())
         {
             canMove = true;
             canJump = true;
             numJumps = 0;
+        }
+       
+    }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag.Equals("Death"))
+        {
+            Respawn.RespawnInstance.RespawnAtLevel(_runtimeData._currentLevel, gameObject);
         }
     }
 
