@@ -6,9 +6,11 @@ TagManager:
   tags:
   - Ground
   - Background
-  - Death
   - Climbables
   - Collectable
+  - Lava
+  - Saws
+  - Spikes
   layers:
   - Default
   - TransparentFX

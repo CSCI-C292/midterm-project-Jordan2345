@@ -9,7 +9,7 @@ public class Player : MonoBehaviour
     [SerializeField] LayerMask _climbables;
     [SerializeField] float _jumpForce = 7f;
     [SerializeField] RuntimeData _runtimeData;
-
+    [SerializeField] Animator _animator;
     private bool canMove = false;
     private bool canJump = true;
     private bool canClimb = false;
@@ -26,7 +26,7 @@ public class Player : MonoBehaviour
         collider2D = transform.GetComponent<CapsuleCollider2D>();
         //reset runtime data
         _runtimeData._currentLevel = 1;
-        //_runtimeData._upgradesCollected = new List<string>();
+        _runtimeData._upgradesCollected = new List<string>();
     }
     // Start is called before the first frame update
 
@@ -47,12 +47,16 @@ public class Player : MonoBehaviour
         float move = Input.GetAxis("Horizontal");
         Vector2 movementVector = new Vector2(move * _movementSpeed, rigidbody.velocity.y);
         rigidbody.velocity = movementVector;
+        _animator.SetFloat("Speed", Mathf.Abs(movementVector.x));
         flipSprite(movementVector);
         RaycastHit2D ladderHit = Physics2D.Raycast(collider2D.bounds.center, Vector2.up, collider2D.bounds.extents.y + 1f, _climbables);
         if (ladderHit.collider != null)
             ClimbLadder();
         else
+        {
             isClimbing = false;
+            _animator.SetBool("IsClimbing", false);
+        }
     }
     private void CheckJump()
     {
@@ -64,6 +68,8 @@ public class Player : MonoBehaviour
                 {
                     rigidbody.velocity = Vector2.up * _jumpForce;
                     numJumps++;
+                    _animator.SetBool("IsJumping", true);
+                    AudioManager.AudioInstance.PlaySound("Jump");
                 }
             }
             else
@@ -72,6 +78,8 @@ public class Player : MonoBehaviour
                 {
                     rigidbody.velocity = Vector2.up * _jumpForce;
                     numJumps++;
+                    _animator.SetBool("IsJumping", true);
+                    AudioManager.AudioInstance.PlaySound("Jump");
                     canJump = false;
                 }
             }
@@ -83,16 +91,24 @@ public class Player : MonoBehaviour
         if(canClimb)
         {
             if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
+            {
                 isClimbing = true;
+            }
         }
       
         if(isClimbing)
         {
+            _animator.SetBool("IsClimbing", true);
+            _animator.SetBool("IsJumping", false);
             float vertSpeed = Input.GetAxis("Vertical") * 4f;
             rigidbody.velocity = new Vector2(rigidbody.velocity.x, vertSpeed);
+
         }
         if (!isClimbing)
+        {
             rigidbody.gravityScale = 1;
+            _animator.SetBool("IsClimbing", false);
+        }
     }
     private void CheckUpgrades()
     {
@@ -125,16 +141,18 @@ public class Player : MonoBehaviour
         {
             canMove = true;
             canJump = true;
+            isClimbing = false;
+            _animator.SetBool("IsJumping", false);
             numJumps = 0;
         }
        
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag.Equals("Death"))
-        {
-            Respawn.RespawnInstance.RespawnAtLevel(_runtimeData._currentLevel, gameObject);
-        }
+        string collisionTag = collision.gameObject.tag;
+        List<string> deathTags = new List<string>(new string[] { "Lava", "Spikes", "Saws" });
+        bool hasDied = deathTags.Contains(collisionTag);
+        AudioManager.AudioInstance.PlayDeathSound(collisionTag,gameObject,_runtimeData._currentLevel,hasDied);
     }
 
 }
